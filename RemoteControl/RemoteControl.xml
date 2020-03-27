@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<RemoteControl>
+  <DefaultAccessUser>
+    <User>RemoteAccess</User>
+    <Password>943785590</Password>
+  </DefaultAccessUser>
+  <ARP>
+    <Map>
+      <IP>192.168.0.109</IP>
+      <Mac>00-D8-61-2F-77-97</Mac>
+    </Map>
+  </ARP>
+</RemoteControl>

@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Net;
 using System.Net.Sockets;
+using System.Xml.Linq;
 
 namespace RemoteControl
 {
@@ -25,7 +26,7 @@ namespace RemoteControl
                         {
                             switch (args[i].ToLower())
                             {
-                                case "-h":
+                                case "-a":
                                     host = args[i + 1];
                                     break;
                                 case "-u":
@@ -44,6 +45,7 @@ namespace RemoteControl
                     case "startup":
                         string mac = null;
                         string broadcastAddress = null;
+                        string address = null;
                         for (var i = 1; i != args.Length - 1; ++i)
                         {
                             switch (args[i])
@@ -54,9 +56,14 @@ namespace RemoteControl
                                 case "-b":
                                     broadcastAddress = args[i + 1];
                                     break;
+                                case "-a":
+                                    address = args[i + 1];
+                                    break;
+                                default:
+                                    break;
                             }
                         }
-                        WakeOnLan(mac, broadcastAddress);
+                        WakeOnLan(mac, address, broadcastAddress);
                         break;
 
                     case "help":
@@ -74,13 +81,39 @@ namespace RemoteControl
             Console.ReadLine();
         }
 
-        static void WakeOnLan(string mac, string broadcastAddress = null)
+        static string xmlPath = "RemoteControl.xml";
+
+        static void WakeOnLan(string mac, string address, string broadcastAddress = null)
         {
+            // 参数检查
+            if (mac == null && address == null)
+                throw new ArgumentNullException("必须提供目标主机的mac地址或IP地址");
+
             if (mac.Length != 17)
                 throw new ArgumentException("提供的mac地址无效，它应该是类似FF:FF:FF:FF:FF:FF这样的格式");
 
-            byte[] macByte = new byte[6];
+            if (address != null)
+            {
+                XElement xml = XElement.Load(xmlPath);
+                var arpList = xml.Element("ARP").Elements("Map");
 
+                XElement map = null;
+                foreach(var m in arpList)
+                {
+                    if (m.Element("IP").Value == address)
+                    {
+                        map = m;
+                        break;
+                    }
+                }
+
+                if (map == null && mac == null)
+                    throw new ArgumentException("找不到该IP对应的mac地址");
+
+            }
+
+            byte[] macByte = new byte[6];
+            
             try
             {
                 for (int i = 0; i < 6; ++i)
@@ -120,6 +153,7 @@ namespace RemoteControl
             p.StartInfo.UseShellExecute = false;
             p.StartInfo.RedirectStandardInput = true;
             p.StartInfo.RedirectStandardError = true;
+            p.StartInfo.RedirectStandardOutput = true;
             p.StartInfo.CreateNoWindow = true;
 
             p.Start();
@@ -134,7 +168,7 @@ namespace RemoteControl
             };
 
             p.StandardInput.WriteLine($"net use \\{host}\\ipc$ \"{ipcPassword}\" /user:\"{ipcUser}\"");
-            p.StandardInput.WriteLine($"shutdown -s -t 60 -m \\{host}");
+            p.StandardInput.WriteLine($"shutdown -s -t 10 -m \\{host}");
             p.StandardInput.WriteLine($"net use \\{host} /delete");
             p.StandardInput.WriteLine("exit");
 
