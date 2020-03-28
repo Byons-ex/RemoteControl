@@ -150,9 +150,10 @@ namespace RemoteControl
                 for (int j = 0; j != macByte.Length; ++j)
                     packet[i + j] = macByte[j];
 
-            using(UdpClient udp = new UdpClient())
+            using (UdpClient udp = new UdpClient())
             {
-                udp.Send(packet, packet.Length, new IPEndPoint(ip, 0));
+                udp.Connect(IPAddress.Broadcast, 5000);
+                udp.Send(packet, packet.Length);
             }
         }
 
