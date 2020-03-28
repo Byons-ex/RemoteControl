@@ -16,12 +16,12 @@ namespace RemoteControl
         {
             try
             {
+                xmlPath = System.AppDomain.CurrentDomain.BaseDirectory + "\\RemoteControl.xml";
+
                 switch (args[0].ToLower())
                 {
                     case "shutdown":
                         string host = null;
-                        string user = null;
-                        string password = null;
                         for (var i = 1; i != args.Length - 1; ++i)
                         {
                             switch (args[i].ToLower())
@@ -29,17 +29,11 @@ namespace RemoteControl
                                 case "-a":
                                     host = args[i + 1];
                                     break;
-                                case "-u":
-                                    user = args[i + 1];
-                                    break;
-                                case "-p":
-                                    password = args[i + 1];
-                                    break;
                                 default:
                                     break;
                             }
                         }
-                        Shutdown(host, user, password);
+                        Shutdown(host);
                         break;
 
                     case "startup":
@@ -77,20 +71,16 @@ namespace RemoteControl
                 Console.WriteLine(e.Message);
             }
 
-            Console.WriteLine("finish!");
-            Console.ReadLine();
+            Console.WriteLine("操作完成");
         }
 
-        static string xmlPath = "RemoteControl.xml";
+        static string xmlPath;
 
         static void WakeOnLan(string mac, string address, string broadcastAddress = null)
         {
             // 参数检查
             if (mac == null && address == null)
                 throw new ArgumentNullException("必须提供目标主机的mac地址或IP地址");
-
-            if (mac.Length != 17)
-                throw new ArgumentException("提供的mac地址无效，它应该是类似FF:FF:FF:FF:FF:FF这样的格式");
 
             if (address != null)
             {
@@ -108,9 +98,30 @@ namespace RemoteControl
                 }
 
                 if (map == null && mac == null)
+                {
                     throw new ArgumentException("找不到该IP对应的mac地址");
+                }
+                else if (map != null && mac != null)
+                {
+                    map.SetElementValue("Mac", mac);
+                }
+                else if (map != null && mac == null)
+                {
+                    mac = map.Element("Mac").Value;
+                }
+                else //if(map == null && mac != null)
+                {
+                    var ipElement = new XElement("IP", address);
+                    var macElement = new XElement("Mac", mac);
+                    var mapElement = new XElement("Map", ipElement, macElement);
+                    xml.Element("ARP").Add(mapElement);
+                }
 
+                xml.Save(xmlPath);
             }
+
+            if (mac.Length != 17)
+                throw new ArgumentException("提供的mac地址无效，它应该是类似FF:FF:FF:FF:FF:FF这样的格式");
 
             byte[] macByte = new byte[6];
             
@@ -145,8 +156,11 @@ namespace RemoteControl
             }
         }
 
-        static void Shutdown(string host, string ipcUser, string ipcPassword)
+        static void Shutdown(string host)
         {
+            if (host == null)
+                throw new ArgumentNullException("没有指定要操作的主机");
+
             Process p = new Process();
 
             p.StartInfo.FileName = "cmd.exe";
@@ -167,9 +181,7 @@ namespace RemoteControl
                 Console.WriteLine(e.Data);
             };
 
-            p.StandardInput.WriteLine($"net use \\{host}\\ipc$ \"{ipcPassword}\" /user:\"{ipcUser}\"");
             p.StandardInput.WriteLine($"shutdown -s -t 10 -m \\{host}");
-            p.StandardInput.WriteLine($"net use \\{host} /delete");
             p.StandardInput.WriteLine("exit");
 
             p.WaitForExit();
