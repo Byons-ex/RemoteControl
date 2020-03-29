@@ -136,7 +136,10 @@ namespace RemoteControl
             }
 
             if (broadcastAddress == null)
-                broadcastAddress = "255.255.255.255";
+            {
+                var broadcastXml = XElement.Load(xmlPath);
+                broadcastAddress = broadcastXml.Element("DefaultBroadcast").Value;
+            }
 
             IPAddress ip = null;
             if(IPAddress.TryParse(broadcastAddress, out ip) == false)

@@ -4,6 +4,7 @@
     <User>RemoteAccess</User>
     <Password>943785590</Password>
   </DefaultUser>
+  <DefaultBroadcast>192.168.0.255</DefaultBroadcast>
   <ARP>
     <Map>
       <IP>192.168.0.109</IP>
