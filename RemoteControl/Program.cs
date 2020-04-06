@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using System.Net;
 using System.Net.Sockets;
 using System.Xml.Linq;
+using System.Net.NetworkInformation;
 
 namespace RemoteControl
 {
@@ -155,8 +156,18 @@ namespace RemoteControl
 
             using (UdpClient udp = new UdpClient())
             {
-                udp.Connect(IPAddress.Broadcast, 5000);
-                udp.Send(packet, packet.Length);
+                var ping = new Ping();
+
+                var pingReply = ping.Send(address);
+                while (pingReply.Status != IPStatus.Success)
+                {
+                    Console.WriteLine($"正在唤醒{address}...");
+                    udp.Send(packet, packet.Length, new IPEndPoint(ip, 0));
+                    pingReply = ping.Send(address);
+                    System.Threading.Thread.Sleep(1000);
+                }
+
+                Console.WriteLine($"{address}已成功唤醒");
             }
         }
 
