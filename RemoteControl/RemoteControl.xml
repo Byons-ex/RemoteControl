@@ -4,10 +4,15 @@
     <User>RemoteAccess</User>
     <Password>943785590</Password>
   </DefaultUser>
+  <DefaultBroadcast>192.168.0.255</DefaultBroadcast>
   <ARP>
     <Map>
       <IP>192.168.0.109</IP>
       <Mac>00-D8-61-2F-77-97</Mac>
+    </Map>
+    <Map>
+      <IP>192.168.0.118</IP>
+      <Mac>FC-AA-14-78-BE-00</Mac>
     </Map>
   </ARP>
 </RemoteControl>

@@ -6,7 +6,6 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Net;
 using System.Net.Sockets;
-using System.Net.NetworkInformation;
 using System.Xml.Linq;
 
 namespace RemoteControl
@@ -137,7 +136,10 @@ namespace RemoteControl
             }
 
             if (broadcastAddress == null)
-                broadcastAddress = "255.255.255.255";
+            {
+                var broadcastXml = XElement.Load(xmlPath);
+                broadcastAddress = broadcastXml.Element("DefaultBroadcast").Value;
+            }
 
             IPAddress ip = null;
             if(IPAddress.TryParse(broadcastAddress, out ip) == false)
@@ -151,20 +153,10 @@ namespace RemoteControl
                 for (int j = 0; j != macByte.Length; ++j)
                     packet[i + j] = macByte[j];
 
-            using(UdpClient udp = new UdpClient())
+            using (UdpClient udp = new UdpClient())
             {
-                var ping = new Ping();
-
-                var pingReply = ping.Send(address);
-                while (pingReply.Status != IPStatus.Success)
-                {
-                    Console.WriteLine($"正在唤醒{address}...");
-                    udp.Send(packet, packet.Length, new IPEndPoint(ip, 0));
-                    pingReply = ping.Send(address);
-                    System.Threading.Thread.Sleep(1000);
-                }
-
-                Console.WriteLine($"{address}已成功唤醒");
+                udp.Connect(IPAddress.Broadcast, 5000);
+                udp.Send(packet, packet.Length);
             }
         }
 
