@@ -196,7 +196,7 @@ namespace RemoteControl
                 Console.WriteLine(e.Data);
             };
 
-            p.StandardInput.WriteLine($"shutdown -s -t 10 -m \\{host}");
+            p.StandardInput.WriteLine($"shutdown -s -t 10 -f -m \\{host}");
             p.StandardInput.WriteLine("exit");
 
             p.WaitForExit();
