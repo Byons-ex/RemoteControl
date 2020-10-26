@@ -157,6 +157,7 @@ namespace RemoteControl
             using (UdpClient udp = new UdpClient())
             {
                 var ping = new Ping();
+                
 
                 var pingReply = ping.Send(address);
                 while (pingReply.Status != IPStatus.Success)
@@ -164,7 +165,6 @@ namespace RemoteControl
                     Console.WriteLine($"正在唤醒{address}...");
                     udp.Send(packet, packet.Length, new IPEndPoint(ip, 0));
                     pingReply = ping.Send(address);
-                    System.Threading.Thread.Sleep(1000);
                 }
 
                 Console.WriteLine($"{address}已成功唤醒");
